@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulator Tumbukan 1D | Ruang Cemerlang</title>
+  <style>
+    :root {
+      --bg: #f4fbff;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #60738a;
+      --line: #d7e6f2;
+      --primary: #14b8a6;
+      --primary-dark: #0f766e;
+      --accent: #8b5cf6;
+      --danger: #ef4444;
+      --warning-bg: #fff7ed;
+      --warning-border: #fdba74;
+      --shadow: 0 14px 34px rgba(30, 41, 59, 0.10);
+      --mv-bg: #fff4bf;
+      --mv-border: #facc15;
+      --pe-bg: #dcfce7;
+      --pe-border: #4ade80;
+      --summary-bg: #eef6ff;
+      --formula-m-bg: #f3e8ff;
+      --formula-e-bg: #fff7ed;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 33rem),
+        radial-gradient(circle at top right, rgba(139,92,246,.12), transparent 28rem),
+        radial-gradient(circle at bottom left, rgba(20,184,166,.10), transparent 26rem),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 28px));
+      margin: 22px auto 40px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: clamp(1.65rem, 3vw, 2.45rem);
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.55;
+    }
+
+    .sign-note {
+      flex: 0 0 auto;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: .92rem;
+      box-shadow: var(--shadow);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(203, 213, 225, 0.85);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 18px;
+      position: sticky;
+      top: 14px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 1.06rem;
+    }
+
+    .object-panel {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 14px;
+      margin-bottom: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(248,252,255,1));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+    }
+
+    .object-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 11px;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 7px;
+      vertical-align: -1px;
+    }
+
+    .dot.one { background: #2563eb; }
+    .dot.two { background: #dc2626; }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: .83rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input[type="number"]:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(20,184,166,.14);
+    }
+
+    input:disabled {
+      background: #eef2f7;
+      color: #94a3b8;
+    }
+
+    .elasticity-box {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 14px;
+      margin-top: 12px;
+      background: linear-gradient(180deg, #f8fffe, #f4f8ff);
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 1fr 70px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .elasticity-value {
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 4px;
+      font-weight: 800;
+      background: #f8fafc;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 11px;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease, background .15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .primary:hover { background: var(--primary-dark); }
+
+    .secondary {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .ghost {
+      background: #eef6ff;
+      color: #1e3a8a;
+      border: 1px solid #bfdbfe;
+    }
+
+    .status {
+      margin-top: 12px;
+      border-radius: 12px;
+      padding: 10px 12px;
+      line-height: 1.45;
+      font-size: .9rem;
+      background: #f3e8ff;
+      border: 1px solid #d8b4fe;
+      color: #6b21a8;
+      min-height: 44px;
+    }
+
+    .status.warning {
+      background: var(--warning-bg);
+      border-color: var(--warning-border);
+      color: #9a3412;
+    }
+
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .simulation-card { padding: 18px; }
+
+    .simulation-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .simulation-toolbar h2,
+    .data-card h2 {
+      margin: 0;
+      font-size: 1.12rem;
+    }
+
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .speed-control select {
+      width: auto;
+      padding: 6px 9px;
+    }
+
+    .track-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid #b7d7f7;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,.96), rgba(240,249,255,.98)),
+        repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(96,165,250,.10) 48px);
+      height: 280px;
+    }
+
+    .track-wrap::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 60%;
+      height: 4px;
+      background: #9ca3af;
+    }
+
+    .center-marker {
+      position: absolute;
+      left: 50%;
+      top: 12px;
+      bottom: 35px;
+      border-left: 1px dashed rgba(100,116,139,.35);
+    }
+
+    .center-marker span {
+      position: absolute;
+      top: 0;
+      left: 7px;
+      color: #94a3b8;
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+
+    .body {
+      position: absolute;
+      bottom: 39%;
+      transform: translate(-50%, 50%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      border: 4px solid rgba(255,255,255,.82);
+      box-shadow: 0 10px 22px rgba(15,23,42,.18);
+      will-change: left;
+      user-select: none;
+    }
+
+    .body.one { background: linear-gradient(145deg, #60a5fa, #2563eb); }
+    .body.two { background: linear-gradient(145deg, #f87171, #dc2626); }
+
+    .body-num {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: .98rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.18);
+      z-index: 3;
+    }
+
+    .body-label {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(100% + 8px);
+      width: max-content;
+      max-width: 150px;
+      background: var(--mv-bg);
+      color: #5b4300;
+      border: 1px solid var(--mv-border);
+      border-radius: 10px;
+      padding: 5px 7px;
+      font-size: .76rem;
+      font-weight: 800;
+      box-shadow: 0 6px 16px rgba(15,23,42,.08);
+    }
+
+    .velocity-arrow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      transform: translateY(-50%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .velocity-arrow .shaft {
+      height: 5px;
+      background: #111827;
+      border-radius: 999px;
+      flex: 1 1 auto;
+      min-width: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    }
+
+    .velocity-arrow .head {
+      width: 0;
+      height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-left: 14px solid #111827;
+      margin-left: -2px;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.18));
+    }
+
+    .velocity-arrow.left {
+      transform: translate(-100%, -50%);
+      justify-content: flex-end;
+    }
+
+    .velocity-arrow.left .shaft {
+      order: 2;
+    }
+
+    .velocity-arrow.left .head {
+      order: 1;
+      border-left: none;
+      border-right: 14px solid #111827;
+      margin-left: 0;
+      margin-right: -2px;
+    }
+
+    .velocity-arrow.zero {
+      width: 14px !important;
+      transform: translate(-50%, -50%);
+      justify-content: center;
+    }
+
+    .velocity-arrow.zero .shaft,
+    .velocity-arrow.zero .head {
+      display: none;
+    }
+
+    .velocity-arrow .dot {
+      display: none;
+      width: 10px;
+      height: 10px;
+      background: #111827;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    }
+
+    .velocity-arrow.zero .dot {
+      display: block;
+    }
+
+    .body-stats {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: calc(100% + 28px);
+      width: max-content;
+      max-width: 164px;
+      background: var(--pe-bg);
+      color: #14532d;
+      border: 1px solid var(--pe-border);
+      border-radius: 10px;
+      padding: 4px 7px;
+      font-size: .72rem;
+      font-weight: 800;
+      line-height: 1.28;
+      box-shadow: 0 6px 16px rgba(15,23,42,.08);
+      white-space: nowrap;
+    }
+
+    .axis-labels {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      color: #64748b;
+      font-size: .8rem;
+    }
+
+    .collision-flash {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: 5px solid rgba(245,158,11,.9);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(.5);
+    }
+
+    .collision-flash.show {
+      animation: flash .48s ease-out;
+    }
+
+    @keyframes flash {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(.45); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.55); }
+    }
+
+    .data-card { padding: 18px; }
+
+    .data-note {
+      color: var(--muted);
+      font-size: .9rem;
+      margin: 6px 0 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: #fff;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 10px 11px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th:last-child, td:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    thead th {
+      background: #e0f2fe;
+      color: #1d4ed8;
+      font-size: .84rem;
+    }
+
+    tbody th {
+      text-align: left;
+      background: #f8fbff;
+      white-space: nowrap;
+    }
+
+    .total-row th, .total-row td {
+      font-weight: 900;
+      background: #ecfccb;
+    }
+
+    .placeholder { color: #94a3b8; }
+
+    .summary-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .summary-item {
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 11px;
+      background: var(--summary-bg);
+    }
+
+    .summary-item span {
+      display: block;
+      color: var(--muted);
+      font-size: .78rem;
+      margin-bottom: 4px;
+    }
+
+    .summary-item strong {
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    details {
+      margin-top: 14px;
+      border: 1px solid #ddd6fe;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #faf5ff;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+      color: #334155;
+    }
+
+    .formula-group {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #ffffff;
+    }
+
+    .formula-group:first-child {
+      background: var(--formula-m-bg);
+      border-color: #d8b4fe;
+    }
+
+    .formula-group:nth-child(2) {
+      background: var(--formula-e-bg);
+      border-color: #fdba74;
+    }
+
+    .formula-group h3 {
+      margin: 0 0 9px;
+      font-size: .95rem;
+      color: var(--ink);
+    }
+
+    .formula-line {
+      padding: 5px 0;
+      font-family: "Cambria Math", Cambria, Georgia, serif;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    .formula-note {
+      grid-column: 1 / -1;
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: #eef6ff;
+      color: #475569;
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: #64748b;
+      font-size: .82rem;
+      text-align: center;
+    }
+
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .app { width: min(100% - 16px, 1180px); margin-top: 10px; }
+      header { flex-direction: column; }
+      .sign-note { width: 100%; }
+      .field-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .track-wrap { height: 245px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .formula-grid { grid-template-columns: 1fr; }
+      .simulation-toolbar { align-items: flex-start; flex-direction: column; }
+    }
+
+
+    .back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 14px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--line);
+      color: var(--primary-dark);
+      text-decoration: none;
+      font-size: .88rem;
+      font-weight: 800;
+      box-shadow: 0 8px 22px rgba(30,41,59,.08);
+      transition: transform .15s ease, background .15s ease;
+    }
+
+    .back-home:hover {
+      transform: translateY(-1px);
+      background: #ffffff;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <a class="back-home" href="../../index.html#simulasi" aria-label="Kembali ke halaman utama Ruang Cemerlang">← Kembali ke Ruang Cemerlang</a>
+
+    <header>
+      <div>
+        <h1>Simulator Tumbukan 1D</h1>
+        <p class="subtitle">Atur massa, besar dan arah kecepatan awal, serta tingkat kelentingan. Jalankan tumbukan, amati gerak kedua benda, lalu catat data yang muncul.</p>
+      </div>
+      <div class="sign-note"><strong>Ketentuan tanda:</strong><br>kanan (+) &nbsp; • &nbsp; kiri (−)</div>
+    </header>
+
+    <div class="layout">
+      <aside class="card controls">
+        <h2 class="section-title">Pengaturan Percobaan</h2>
+
+        <section class="object-panel">
+          <div class="object-heading"><span><span class="dot one"></span>Benda 1</span><span id="u1Signed">+2,00 m/s</span></div>
+          <div class="field-grid">
+            <div class="field full">
+              <label for="m1">Massa (kg)</label>
+              <input id="m1" type="number" min="0.1" max="10" step="0.1" value="1" />
+            </div>
+            <div>
+              <label for="speed1">Besar kecepatan (m/s)</label>
+              <input id="speed1" type="number" min="0" max="10" step="0.1" value="2" />
+            </div>
+            <div>
+              <label for="dir1">Arah</label>
+              <select id="dir1">
+                <option value="1" selected>Kanan (+)</option>
+                <option value="-1">Kiri (−)</option>
+                <option value="0">Diam</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="object-panel">
+          <div class="object-heading"><span><span class="dot two"></span>Benda 2</span><span id="u2Signed">0,00 m/s</span></div>
+          <div class="field-grid">
+            <div class="field full">
+              <label for="m2">Massa (kg)</label>
+              <input id="m2" type="number" min="0.1" max="10" step="0.1" value="1" />
+            </div>
+            <div>
+              <label for="speed2">Besar kecepatan (m/s)</label>
+              <input id="speed2" type="number" min="0" max="10" step="0.1" value="0" />
+            </div>
+            <div>
+              <label for="dir2">Arah</label>
+              <select id="dir2">
+                <option value="1">Kanan (+)</option>
+                <option value="-1">Kiri (−)</option>
+                <option value="0" selected>Diam</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="elasticity-box">
+          <div class="object-heading"><span>Tingkat kelentingan</span><span id="elasticityText">100%</span></div>
+          <div class="slider-row">
+            <input id="elasticity" type="range" min="0" max="100" step="1" value="100" aria-label="Tingkat kelentingan" />
+            <div class="elasticity-value" id="elasticityBadge">100%</div>
+          </div>
+        </section>
+
+        <div class="button-grid">
+          <button id="runBtn" class="primary">▶ Jalankan</button>
+          <button id="pauseBtn" class="secondary" disabled>Ⅱ Jeda</button>
+          <button id="repeatBtn" class="ghost">↻ Ulangi</button>
+          <button id="resetBtn" class="ghost">Reset</button>
+        </div>
+
+        <div class="status" id="statusBox">Siap. Pastikan Benda 1 dapat menyusul atau bergerak mendekati Benda 2.</div>
+      </aside>
+
+      <main class="main">
+        <section class="card simulation-card">
+          <div class="simulation-toolbar">
+            <h2>Lintasan Tumbukan</h2>
+            <div class="speed-control">
+              <label for="playbackSpeed" style="margin:0">Kecepatan animasi</label>
+              <select id="playbackSpeed">
+                <option value="0.6">0,6×</option>
+                <option value="1" selected>1×</option>
+                <option value="1.6">1,6×</option>
+                <option value="2.2">2,2×</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="track-wrap" id="track">
+            <div class="center-marker"><span>titik tengah lintasan</span></div>
+            <div class="body one" id="body1">
+              <div class="body-num">1</div>
+              <div class="velocity-arrow right" id="arrow1"><span class="shaft"></span><span class="head"></span><span class="dot"></span></div>
+              <div class="body-label" id="label1">m = 1,00 kg<br>v = +2,00 m/s</div>
+              <div class="body-stats" id="stats1">p = +2,00 kg·m/s<br>Ek = 2,00 J</div>
+            </div>
+            <div class="body two" id="body2">
+              <div class="body-num">2</div>
+              <div class="velocity-arrow zero" id="arrow2"><span class="shaft"></span><span class="head"></span><span class="dot"></span></div>
+              <div class="body-label" id="label2">m = 1,00 kg<br>v = 0,00 m/s</div>
+              <div class="body-stats" id="stats2">p = 0,00 kg·m/s<br>Ek = 0,00 J</div>
+            </div>
+            <div class="collision-flash" id="flash"></div>
+            <div class="axis-labels"><span>kiri (−)</span><span>kanan (+)</span></div>
+          </div>
+        </section>
+
+        <section class="card data-card">
+          <h2>Data Momentum dan Energi Kinetik</h2>
+          <p class="data-note">Nilai sebelum tumbukan ditampilkan langsung. Nilai sesudah tumbukan muncul setelah kedua benda bertumbukan.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">Besaran</th>
+                  <th colspan="2">Sebelum tumbukan</th>
+                  <th colspan="2">Sesudah tumbukan</th>
+                </tr>
+                <tr>
+                  <th>Benda 1</th>
+                  <th>Benda 2</th>
+                  <th>Benda 1</th>
+                  <th>Benda 2</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Kecepatan (m/s)</th>
+                  <td id="u1Cell">+2,00</td>
+                  <td id="u2Cell">0,00</td>
+                  <td id="v1Cell" class="placeholder">—</td>
+                  <td id="v2Cell" class="placeholder">—</td>
+                </tr>
+                <tr>
+                  <th>Momentum (kg·m/s)</th>
+                  <td id="p1Before">+2,00</td>
+                  <td id="p2Before">0,00</td>
+                  <td id="p1After" class="placeholder">—</td>
+                  <td id="p2After" class="placeholder">—</td>
+                </tr>
+                <tr>
+                  <th>Energi kinetik (J)</th>
+                  <td id="ke1Before">2,00</td>
+                  <td id="ke2Before">0,00</td>
+                  <td id="ke1After" class="placeholder">—</td>
+                  <td id="ke2After" class="placeholder">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-item"><span>Momentum total sebelum</span><strong id="pTotalBefore">+2,00 kg·m/s</strong></div>
+            <div class="summary-item"><span>Momentum total sesudah</span><strong id="pTotalAfter">—</strong></div>
+            <div class="summary-item"><span>Energi kinetik total sebelum</span><strong id="keTotalBefore">2,00 J</strong></div>
+            <div class="summary-item"><span>Energi kinetik total sesudah</span><strong id="keTotalAfter">—</strong></div>
+          </div>
+
+          <details>
+            <summary>Rumus yang digunakan</summary>
+            <div class="formula-grid">
+              <div class="formula-group">
+                <h3>Momentum</h3>
+                <div class="formula-line"><i>p</i> = <i>m</i> · <i>v</i></div>
+                <div class="formula-line">Σ<i>p</i> = <i>m</i><sub>1</sub><i>v</i><sub>1</sub> + <i>m</i><sub>2</sub><i>v</i><sub>2</sub></div>
+                <div class="formula-line">Σ<i>p</i>′ = <i>m</i><sub>1</sub><i>v</i>′<sub>1</sub> + <i>m</i><sub>2</sub><i>v</i>′<sub>2</sub></div>
+                <div class="formula-line">Pada sistem tertutup: Σ<i>p</i> = Σ<i>p</i>′</div>
+              </div>
+
+              <div class="formula-group">
+                <h3>Energi kinetik</h3>
+                <div class="formula-line"><i>E</i><sub>k</sub> = ½ <i>m</i><i>v</i><sup>2</sup></div>
+                <div class="formula-line"><i>E</i><sub>k sebelum</sub> = ½ <i>m</i><sub>1</sub><i>v</i><sub>1</sub><sup>2</sup> + ½ <i>m</i><sub>2</sub><i>v</i><sub>2</sub><sup>2</sup></div>
+                <div class="formula-line"><i>E</i><sub>k setelah</sub> = ½ <i>m</i><sub>1</sub>(<i>v</i>′<sub>1</sub>)<sup>2</sup> + ½ <i>m</i><sub>2</sub>(<i>v</i>′<sub>2</sub>)<sup>2</sup></div>
+              </div>
+
+              <div class="formula-note">
+                <strong>Keterangan:</strong> <i>v</i><sub>1</sub> dan <i>v</i><sub>2</sub> adalah kecepatan sebelum tumbukan; <i>v</i>′<sub>1</sub> dan <i>v</i>′<sub>2</sub> adalah kecepatan setelah tumbukan. Arah kanan bernilai positif dan arah kiri bernilai negatif. Tingkat kelentingan: 0% ≤ kelentingan ≤ 100%.
+              </div>
+            </div>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>Simulator ini tidak memberi nama jenis tumbukan atau kesimpulan otomatis. Gunakan data untuk menjawab pertanyaan analisis pada LKPD.</footer>
+  </div>
+
+  <script>
+    (() => {
+      const els = {
+        m1: document.getElementById('m1'),
+        m2: document.getElementById('m2'),
+        speed1: document.getElementById('speed1'),
+        speed2: document.getElementById('speed2'),
+        dir1: document.getElementById('dir1'),
+        dir2: document.getElementById('dir2'),
+        elasticity: document.getElementById('elasticity'),
+        elasticityText: document.getElementById('elasticityText'),
+        elasticityBadge: document.getElementById('elasticityBadge'),
+        playbackSpeed: document.getElementById('playbackSpeed'),
+        runBtn: document.getElementById('runBtn'),
+        pauseBtn: document.getElementById('pauseBtn'),
+        repeatBtn: document.getElementById('repeatBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        statusBox: document.getElementById('statusBox'),
+        track: document.getElementById('track'),
+        body1: document.getElementById('body1'),
+        body2: document.getElementById('body2'),
+        label1: document.getElementById('label1'),
+        label2: document.getElementById('label2'),
+        arrow1: document.getElementById('arrow1'),
+        arrow2: document.getElementById('arrow2'),
+        stats1: document.getElementById('stats1'),
+        stats2: document.getElementById('stats2'),
+        u1Signed: document.getElementById('u1Signed'),
+        u2Signed: document.getElementById('u2Signed'),
+        flash: document.getElementById('flash'),
+        u1Cell: document.getElementById('u1Cell'),
+        u2Cell: document.getElementById('u2Cell'),
+        v1Cell: document.getElementById('v1Cell'),
+        v2Cell: document.getElementById('v2Cell'),
+        p1Before: document.getElementById('p1Before'),
+        p2Before: document.getElementById('p2Before'),
+        p1After: document.getElementById('p1After'),
+        p2After: document.getElementById('p2After'),
+        ke1Before: document.getElementById('ke1Before'),
+        ke2Before: document.getElementById('ke2Before'),
+        ke1After: document.getElementById('ke1After'),
+        ke2After: document.getElementById('ke2After'),
+        pTotalBefore: document.getElementById('pTotalBefore'),
+        pTotalAfter: document.getElementById('pTotalAfter'),
+        keTotalBefore: document.getElementById('keTotalBefore'),
+        keTotalAfter: document.getElementById('keTotalAfter')
+      };
+
+      const WORLD_LENGTH = 12;
+      const START_X1 = 3.4;
+      const START_X2 = 8.6;
+      const POST_COLLISION_DURATION = 4.5;
+
+      let sim = null;
+      let animationFrame = null;
+      let lastTimestamp = null;
+      let paused = false;
+
+      const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+      const num = (value, fallback = 0) => {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      };
+      const fmt = (value, signed = false) => {
+        if (!Number.isFinite(value)) return '—';
+        const normalized = Math.abs(value) < 0.0005 ? 0 : value;
+        const text = normalized.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return signed && normalized > 0 ? `+${text}` : text;
+      };
+      const signedVelocity = (speedEl, dirEl) => {
+        const direction = num(dirEl.value, 0);
+        return direction === 0 ? 0 : Math.abs(num(speedEl.value, 0)) * direction;
+      };
+      const momentum = (m, v) => m * v;
+      const kinetic = (m, v) => 0.5 * m * v * v;
+      const radiusForMass = (m) => clamp(0.28 + Math.sqrt(m) * 0.09, 0.32, 0.62);
+
+      function readInputs() {
+        const m1 = clamp(num(els.m1.value, 1), 0.1, 10);
+        const m2 = clamp(num(els.m2.value, 1), 0.1, 10);
+        const u1 = signedVelocity(els.speed1, els.dir1);
+        const u2 = signedVelocity(els.speed2, els.dir2);
+        const e = clamp(num(els.elasticity.value, 100) / 100, 0, 1);
+        return { m1, m2, u1, u2, e, r1: radiusForMass(m1), r2: radiusForMass(m2) };
+      }
+
+      function calculateFinal(data) {
+        const { m1, m2, u1, u2, e } = data;
+        const denominator = m1 + m2;
+        const v1 = (m1 * u1 + m2 * u2 - m2 * e * (u1 - u2)) / denominator;
+        const v2 = (m1 * u1 + m2 * u2 + m1 * e * (u1 - u2)) / denominator;
+        return { v1, v2 };
+      }
+
+      function currentDirectionSymbol(v) {
+        if (Math.abs(v) < 0.0005) return '•';
+        return v > 0 ? '→' : '←';
+      }
+
+      function setVelocityArrow(el, v) {
+        const speed = Math.abs(v);
+        const width = Math.max(18, Math.min(88, 18 + speed * 16));
+        el.style.width = `${width}px`;
+        el.classList.remove('left', 'right', 'zero');
+        if (speed < 0.0005) {
+          el.classList.add('zero');
+        } else if (v > 0) {
+          el.classList.add('right');
+        } else {
+          el.classList.add('left');
+        }
+      }
+
+      function setStatus(message, warning = false) {
+        els.statusBox.textContent = message;
+        els.statusBox.classList.toggle('warning', warning);
+      }
+
+      function updateDirectionInputs() {
+        els.speed1.disabled = els.dir1.value === '0';
+        els.speed2.disabled = els.dir2.value === '0';
+        if (els.dir1.value === '0') els.speed1.value = 0;
+        if (els.dir2.value === '0') els.speed2.value = 0;
+      }
+
+      function updateElasticityLabel() {
+        const value = `${els.elasticity.value}%`;
+        els.elasticityText.textContent = value;
+        els.elasticityBadge.textContent = value;
+      }
+
+      function setBodyStyle(body, mass, radiusWorld) {
+        const trackWidth = els.track.clientWidth || 700;
+        const diameterPx = clamp((radiusWorld * 2 / WORLD_LENGTH) * trackWidth, 50, 92);
+        body.style.width = `${diameterPx}px`;
+        body.style.height = `${diameterPx}px`;
+        body.style.fontSize = `${clamp(16 + mass * 1.4, 17, 27)}px`;
+      }
+
+      function positionBody(body, xWorld) {
+        body.style.left = `${clamp(xWorld / WORLD_LENGTH * 100, -5, 105)}%`;
+      }
+
+      function setBodyLabels(data, v1, v2) {
+        const p1 = momentum(data.m1, v1);
+        const p2 = momentum(data.m2, v2);
+        const ke1 = kinetic(data.m1, v1);
+        const ke2 = kinetic(data.m2, v2);
+        els.label1.innerHTML = `m = ${fmt(data.m1)} kg<br>v = ${fmt(v1, true)} m/s`;
+        els.label2.innerHTML = `m = ${fmt(data.m2)} kg<br>v = ${fmt(v2, true)} m/s`;
+        setVelocityArrow(els.arrow1, v1);
+        setVelocityArrow(els.arrow2, v2);
+        els.stats1.innerHTML = `p = ${fmt(p1, true)} kg·m/s<br>Ek = ${fmt(ke1)} J`;
+        els.stats2.innerHTML = `p = ${fmt(p2, true)} kg·m/s<br>Ek = ${fmt(ke2)} J`;
+      }
+
+      function clearAfterData() {
+        [els.v1Cell, els.v2Cell, els.p1After, els.p2After, els.ke1After, els.ke2After].forEach(el => {
+          el.textContent = '—';
+          el.classList.add('placeholder');
+        });
+        els.pTotalAfter.textContent = '—';
+        els.keTotalAfter.textContent = '—';
+      }
+
+      function updateInitialData() {
+        updateDirectionInputs();
+        updateElasticityLabel();
+        const data = readInputs();
+        const p1 = momentum(data.m1, data.u1);
+        const p2 = momentum(data.m2, data.u2);
+        const ke1 = kinetic(data.m1, data.u1);
+        const ke2 = kinetic(data.m2, data.u2);
+
+        els.u1Signed.textContent = `${fmt(data.u1, true)} m/s`;
+        els.u2Signed.textContent = `${fmt(data.u2, true)} m/s`;
+        els.u1Cell.textContent = fmt(data.u1, true);
+        els.u2Cell.textContent = fmt(data.u2, true);
+        els.p1Before.textContent = fmt(p1, true);
+        els.p2Before.textContent = fmt(p2, true);
+        els.ke1Before.textContent = fmt(ke1);
+        els.ke2Before.textContent = fmt(ke2);
+        els.pTotalBefore.textContent = `${fmt(p1 + p2, true)} kg·m/s`;
+        els.keTotalBefore.textContent = `${fmt(ke1 + ke2)} J`;
+
+        setBodyStyle(els.body1, data.m1, data.r1);
+        setBodyStyle(els.body2, data.m2, data.r2);
+
+        if (!sim || !sim.running) {
+          positionBody(els.body1, START_X1);
+          positionBody(els.body2, START_X2);
+          setBodyLabels(data, data.u1, data.u2);
+          clearAfterData();
+        }
+      }
+
+      function showAfterData(data, final) {
+        const p1 = momentum(data.m1, final.v1);
+        const p2 = momentum(data.m2, final.v2);
+        const ke1 = kinetic(data.m1, final.v1);
+        const ke2 = kinetic(data.m2, final.v2);
+
+        const pairs = [
+          [els.v1Cell, fmt(final.v1, true)],
+          [els.v2Cell, fmt(final.v2, true)],
+          [els.p1After, fmt(p1, true)],
+          [els.p2After, fmt(p2, true)],
+          [els.ke1After, fmt(ke1)],
+          [els.ke2After, fmt(ke2)]
+        ];
+        pairs.forEach(([el, text]) => {
+          el.textContent = text;
+          el.classList.remove('placeholder');
+        });
+        els.pTotalAfter.textContent = `${fmt(p1 + p2, true)} kg·m/s`;
+        els.keTotalAfter.textContent = `${fmt(ke1 + ke2)} J`;
+      }
+
+      function flashCollision(xWorld) {
+        const xPct = clamp(xWorld / WORLD_LENGTH * 100, 0, 100);
+        els.flash.style.left = `${xPct}%`;
+        els.flash.style.top = '63%';
+        els.flash.classList.remove('show');
+        void els.flash.offsetWidth;
+        els.flash.classList.add('show');
+      }
+
+      function lockInputs(locked) {
+        [els.m1, els.m2, els.speed1, els.speed2, els.dir1, els.dir2, els.elasticity].forEach(el => el.disabled = locked);
+        els.runBtn.disabled = locked;
+        els.pauseBtn.disabled = !locked;
+        if (!locked) updateDirectionInputs();
+      }
+
+      function startSimulation() {
+        stopAnimation(false);
+        updateInitialData();
+        const data = readInputs();
+        const separation = START_X2 - START_X1 - data.r1 - data.r2;
+        const relative = data.u1 - data.u2;
+
+        if (relative <= 0) {
+          setStatus('Kedua benda tidak akan bertumbukan. Atur agar Benda 1 menyusul Benda 2 atau keduanya bergerak saling mendekat.', true);
+          return;
+        }
+
+        const tCollision = separation / relative;
+        if (!Number.isFinite(tCollision) || tCollision < 0 || tCollision > 30) {
+          setStatus('Tumbukan membutuhkan waktu terlalu lama. Perbesar kecepatan relatif kedua benda.', true);
+          return;
+        }
+
+        const final = calculateFinal(data);
+        sim = {
+          data,
+          final,
+          t: 0,
+          tCollision,
+          collided: false,
+          running: true,
+          x1: START_X1,
+          x2: START_X2
+        };
+        paused = false;
+        lastTimestamp = null;
+        clearAfterData();
+        lockInputs(true);
+        els.pauseBtn.textContent = 'Ⅱ Jeda';
+        setStatus('Simulasi berjalan. Amati arah dan perubahan kecepatan kedua benda.');
+        animationFrame = requestAnimationFrame(stepSimulation);
+      }
+
+      function stepSimulation(timestamp) {
+        if (!sim || !sim.running) return;
+        if (paused) {
+          lastTimestamp = timestamp;
+          animationFrame = requestAnimationFrame(stepSimulation);
+          return;
+        }
+
+        if (lastTimestamp == null) lastTimestamp = timestamp;
+        const dtReal = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
+        lastTimestamp = timestamp;
+        const playback = num(els.playbackSpeed.value, 1);
+        const dt = dtReal * playback;
+        const previousT = sim.t;
+        sim.t += dt;
+
+        if (!sim.collided && sim.t >= sim.tCollision) {
+          const dtBefore = Math.max(0, sim.tCollision - previousT);
+          sim.x1 += sim.data.u1 * dtBefore;
+          sim.x2 += sim.data.u2 * dtBefore;
+          sim.collided = true;
+          const touchingX1 = sim.x1;
+          sim.x2 = touchingX1 + sim.data.r1 + sim.data.r2;
+          showAfterData(sim.data, sim.final);
+          setBodyLabels(sim.data, sim.final.v1, sim.final.v2);
+          flashCollision((sim.x1 + sim.x2) / 2);
+          setStatus('Tumbukan terjadi. Data sesudah tumbukan sudah muncul.');
+
+          const dtAfter = Math.max(0, sim.t - sim.tCollision);
+          sim.x1 += sim.final.v1 * dtAfter;
+          sim.x2 += sim.final.v2 * dtAfter;
+        } else if (!sim.collided) {
+          sim.x1 = START_X1 + sim.data.u1 * sim.t;
+          sim.x2 = START_X2 + sim.data.u2 * sim.t;
+          setBodyLabels(sim.data, sim.data.u1, sim.data.u2);
+        } else {
+          sim.x1 += sim.final.v1 * dt;
+          sim.x2 += sim.final.v2 * dt;
+          setBodyLabels(sim.data, sim.final.v1, sim.final.v2);
+        }
+
+        positionBody(els.body1, sim.x1);
+        positionBody(els.body2, sim.x2);
+
+        const afterTime = sim.t - sim.tCollision;
+        const outOfBounds = sim.x1 < -1.2 || sim.x1 > WORLD_LENGTH + 1.2 || sim.x2 < -1.2 || sim.x2 > WORLD_LENGTH + 1.2;
+        if (sim.collided && (afterTime >= POST_COLLISION_DURATION || outOfBounds)) {
+          sim.running = false;
+          lockInputs(false);
+          els.pauseBtn.disabled = true;
+          setStatus('Simulasi selesai. Catat data sebelum dan sesudah tumbukan pada LKPD.');
+          return;
+        }
+
+        animationFrame = requestAnimationFrame(stepSimulation);
+      }
+
+      function stopAnimation(resetVisual = true) {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+        lastTimestamp = null;
+        if (sim) sim.running = false;
+        sim = null;
+        paused = false;
+        lockInputs(false);
+        els.pauseBtn.textContent = 'Ⅱ Jeda';
+        if (resetVisual) updateInitialData();
+      }
+
+      function repeatSimulation() {
+        stopAnimation(true);
+        startSimulation();
+      }
+
+      function resetAll() {
+        stopAnimation(false);
+        els.m1.value = 1;
+        els.m2.value = 1;
+        els.speed1.value = 2;
+        els.speed2.value = 0;
+        els.dir1.value = '1';
+        els.dir2.value = '0';
+        els.elasticity.value = 100;
+        els.playbackSpeed.value = '1';
+        setStatus('Siap. Pastikan Benda 1 dapat menyusul atau bergerak mendekati Benda 2.');
+        updateInitialData();
+      }
+
+      function togglePause() {
+        if (!sim || !sim.running) return;
+        paused = !paused;
+        els.pauseBtn.textContent = paused ? '▶ Lanjut' : 'Ⅱ Jeda';
+        setStatus(paused ? 'Simulasi dijeda.' : 'Simulasi dilanjutkan.');
+      }
+
+      [els.m1, els.m2, els.speed1, els.speed2, els.dir1, els.dir2, els.elasticity].forEach(el => {
+        el.addEventListener('input', updateInitialData);
+        el.addEventListener('change', updateInitialData);
+      });
+      window.addEventListener('resize', updateInitialData);
+      els.runBtn.addEventListener('click', startSimulation);
+      els.pauseBtn.addEventListener('click', togglePause);
+      els.repeatBtn.addEventListener('click', repeatSimulation);
+      els.resetBtn.addEventListener('click', resetAll);
+
+      updateInitialData();
+    })();
+  </script>
+</body>
+</html>
